@@ -441,6 +441,7 @@ footer{background:var(--bg-secondary);border-top:1px solid var(--glass-border);p
       </div>
       <select class="fsel" id="f-funktion"><option value="">Alle Funktionen</option></select>
       <select class="fsel" id="f-branche"><option value="">Alle Branchen</option></select>
+      <select class="fsel" id="f-faehigkeit"><option value="">Alle Grundfähigkeiten</option></select>
     </div>
     <div class="filterbar">
       <div class="btoggles">
@@ -638,6 +639,10 @@ function initMeta(){
   const fSel=$("#f-funktion"), bSel=$("#f-branche");
   funcs.forEach(f=>{ const o=document.createElement("option"); o.value=f; o.textContent=f; fSel.appendChild(o); });
   [...new Set(CASES.map(c=>c.branche))].forEach(b=>{ const o=document.createElement("option"); o.value=b; o.textContent=b; bSel.appendChild(o); });
+  const capSel=$("#f-faehigkeit");
+  const caps=[...new Set(CASES.map(c=>c.faehigkeit).filter(f=>f&&!/keine Grundf|übergreifend/i.test(f)))].sort((a,b)=>
+    CASES.filter(c=>c.faehigkeit===b).length - CASES.filter(c=>c.faehigkeit===a).length);
+  caps.forEach(f=>{ const o=document.createElement("option"); o.value=f; o.textContent=f+" ("+CASES.filter(c=>c.faehigkeit===f).length+")"; capSel.appendChild(o); });
   $("#year").textContent = new Date().getFullYear();
   if(HUBSPOT_PORTAL_ID && HUBSPOT_FORM_ID){ const sb=$("#setup-banner"); if(sb) sb.style.display="none"; }
 }
@@ -855,10 +860,11 @@ function downloadSelected(ids){
 let activeBenefits=new Set();
 function renderGrid(){
   const term=$("#search").value.trim().toLowerCase();
-  const fn=$("#f-funktion").value, br=$("#f-branche").value;
+  const fn=$("#f-funktion").value, br=$("#f-branche").value, cap=$("#f-faehigkeit").value;
   const list=CASES.filter(c=>{
     if(fn && c.funktion!==fn) return false;
     if(br && c.branche!==br) return false;
+    if(cap && c.faehigkeit!==cap) return false;
     if(activeBenefits.has("schneller") && !c.schneller) return false;
     if(activeBenefits.has("besser") && !c.besser) return false;
     if(activeBenefits.has("kosten") && !c.kosten) return false;
@@ -889,6 +895,7 @@ function initGallery(){
   $("#search").addEventListener("input",renderGrid);
   $("#f-funktion").addEventListener("change",renderGrid);
   $("#f-branche").addEventListener("change",renderGrid);
+  $("#f-faehigkeit").addEventListener("change",renderGrid);
   $$("#alle-cases .btoggle").forEach(b=>b.addEventListener("click",()=>{
     const k=b.dataset.benefit; b.classList.toggle("on");
     if(activeBenefits.has(k)) activeBenefits.delete(k); else activeBenefits.add(k);
